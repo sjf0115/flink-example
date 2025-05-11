@@ -1,4 +1,4 @@
-package org.example;
+package com.flink.example;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
