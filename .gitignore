@@ -1,0 +1,15 @@
+.classpath
+.project
+*.DS_Store
+*.iml
+*.swp
+.idea/*
+.metadata/*
+package/*
+*.ipr
+*.iws
+**.settings
+**.svn
+**target
+**logs/
+.mvn/*
