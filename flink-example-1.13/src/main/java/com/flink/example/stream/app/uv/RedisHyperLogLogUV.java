@@ -1,14 +1,15 @@
 package com.flink.example.stream.app.uv;
 
 import com.flink.common.bean.SimpleUserBehavior;
-import com.flink.example.stream.connector.redis.FlinkJedisPool;
-import com.flink.example.stream.connector.redis.FlinkJedisPoolConfig;
-import com.flink.example.stream.connector.redis.RedisSink;
+import com.flink.example.stream.connector.redis.function.FlinkJedisPool;
+import com.flink.example.stream.connector.redis.function.FlinkJedisPoolConfig;
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.streaming.api.functions.source.datagen.DataGeneratorSource;
 import org.apache.flink.streaming.api.functions.source.datagen.RandomGenerator;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import java.io.IOException;
  */
 public class RedisHyperLogLogUV {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RedisSink.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RedisHyperLogLogUV.class);
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -46,20 +47,27 @@ public class RedisHyperLogLogUV {
         DataStream<SimpleUserBehavior> source = env.addSource(generatorSource, "DataGeneratorSource")
                 .returns(Types.POJO(SimpleUserBehavior.class));
 
+        // 基于 Redis HyperLogLog 计算 UV
         FlinkJedisPoolConfig config = new FlinkJedisPoolConfig.Builder()
                 .setHost("localhost")
                 .setPort(6379)
                 .build();
-        source.addSink(new RedisHyperLogLogSink(config)).setParallelism(1);
+        DataStream<Tuple2<Long, Long>> map = source.map(new HyperLogLogUV(config));
+
+        // 输出到控制台
+        map.addSink(new PrintSinkFunction<>()).setParallelism(1);
 
         env.execute("RedisHyperLogLogUV");
     }
 
-    public static class RedisHyperLogLogSink extends RichSinkFunction<SimpleUserBehavior> {
+    /**
+     * 基于 Redis HyperLogLog 计算 UV
+     */
+    public static class HyperLogLogUV extends RichMapFunction<SimpleUserBehavior, Tuple2<Long, Long>> {
         private FlinkJedisPool jedisPool;
         private FlinkJedisPoolConfig config;
 
-        public RedisHyperLogLogSink(FlinkJedisPoolConfig config) {
+        public HyperLogLogUV(FlinkJedisPoolConfig config) {
             this.config = config;
         }
 
@@ -74,19 +82,20 @@ public class RedisHyperLogLogUV {
         }
 
         @Override
-        public void invoke(SimpleUserBehavior behavior, Context context) throws Exception {
+        public void close() throws IOException {
+            if (jedisPool != null) {
+                jedisPool.close();
+            }
+        }
+
+        @Override
+        public Tuple2<Long, Long> map(SimpleUserBehavior behavior) throws Exception {
             Long uid = behavior.getUserId();
             String key = "hhl_uv";
             jedisPool.pfadd(key, String.valueOf(uid));
             Long uv = jedisPool.pfcount(key);
             LOG.info("uid: {}, uv: {}", uid, uv);
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (jedisPool != null) {
-                jedisPool.close();
-            }
+            return Tuple2.of(uid, uv);
         }
     }
 }

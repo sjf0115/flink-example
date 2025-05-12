@@ -1,4 +1,4 @@
-package com.flink.example.stream.connector.redis;
+package com.flink.example.stream.connector.redis.function;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.flink.util.Preconditions;
@@ -14,13 +14,13 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 功能：Flink JedisPool
+ * 功能：Flink Redis 单机模式连接池
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/28 下午10:04
  */
-public class FlinkJedisPool implements FlinkRedisCommand, Closeable {
+public class FlinkJedisPool implements FlinkJedisPoolBase, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkJedisPool.class);
     private transient JedisPool jedisPool;
 
@@ -47,13 +47,13 @@ public class FlinkJedisPool implements FlinkRedisCommand, Closeable {
      * @param jedis
      */
     private void releaseInstance(Jedis jedis) {
-        if(jedis != null) {
-            try {
-                jedis.close();
-            } catch (Exception var3) {
-                LOG.error("Failed to close (return) instance to pool", var3);
-            }
-
+        if (jedis == null) {
+            return;
+        }
+        try {
+            jedis.close();
+        } catch (Exception e) {
+            LOG.error("Failed to close (return) instance to pool", e);
         }
     }
 

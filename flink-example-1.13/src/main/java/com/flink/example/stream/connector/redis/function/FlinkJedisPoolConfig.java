@@ -1,4 +1,4 @@
-package com.flink.example.stream.connector.redis;
+package com.flink.example.stream.connector.redis.function;
 
 import scala.Serializable;
 

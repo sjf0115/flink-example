@@ -1,11 +1,13 @@
-package com.flink.example.stream.connector.redis;
+package com.flink.example.stream.connector.redis.function;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
-// Flink Redis 命令
-public interface FlinkRedisCommand extends Serializable {
+/**
+ * Flink Redis 连接池接口
+ */
+public interface FlinkJedisPoolBase extends Serializable {
     void open() throws Exception;
 
     void hset(String key, String hashField, String value, Integer ttl);
