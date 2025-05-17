@@ -46,12 +46,17 @@
             <artifactId>flink-connector-redis_2.11</artifactId>
         </dependency>
 
-
         <!-- 3. 公共 -->
         <dependency>
             <groupId>com.flink.example</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
+        </dependency>
+
+        <!-- 4.1 流算法 -->
+        <dependency>
+            <groupId>org.apache.datasketches</groupId>
+            <artifactId>datasketches-java</artifactId>
         </dependency>
     </dependencies>
 </project>
