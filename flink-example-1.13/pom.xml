@@ -43,17 +43,33 @@
         <!-- 2.1 Flink Redis Connector -->
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-redis_2.11</artifactId>
+            <artifactId>flink-connector-redis_${scala.binary.version}</artifactId>
         </dependency>
 
-        <!-- 3. 公共 -->
+        <!-- 2.2 Flink Jdbc Connector -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <!-- 3. 数据库驱动 -->
+
+        <!-- 3.1 MySQL -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <!-- 4. 公共 -->
         <dependency>
             <groupId>com.flink.example</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
         </dependency>
 
-        <!-- 4.1 流算法 -->
+        <!-- 5. 大数据核心库 -->
+        <!-- 5.1 流算法 -->
         <dependency>
             <groupId>org.apache.datasketches</groupId>
             <artifactId>datasketches-java</artifactId>
