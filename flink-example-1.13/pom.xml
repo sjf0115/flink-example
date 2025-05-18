@@ -61,6 +61,12 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
+        <!-- 3.2 ClickHouse -->
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+        </dependency>
+
         <!-- 4. 公共 -->
         <dependency>
             <groupId>com.flink.example</groupId>

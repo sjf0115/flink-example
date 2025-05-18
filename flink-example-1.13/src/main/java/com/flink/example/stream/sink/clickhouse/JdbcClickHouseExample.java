@@ -21,7 +21,7 @@ import java.sql.SQLException;
  * 公众号：大数据生态
  * 日期：2024/8/25 18:18
  */
-public class JdbcClickhouseExample {
+public class JdbcClickHouseExample {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -66,10 +66,9 @@ public class JdbcClickhouseExample {
         // 4. 连接配置
         JdbcConnectionOptions connectionOptions = new JdbcConnectionOptions
                 .JdbcConnectionOptionsBuilder()
-                .withUrl("dbc:clickhouse://localhost:8123/flink")
+                .withUrl("jdbc:clickhouse://localhost:8123/flink")
                 .withDriverName("com.clickhouse.jdbc.ClickHouseDriver")
-                .withUsername("root")
-                .withPassword("root")
+                .withUsername("default")
                 .withConnectionCheckTimeoutSeconds(60) // 连接检查超时
                 .build();
 
