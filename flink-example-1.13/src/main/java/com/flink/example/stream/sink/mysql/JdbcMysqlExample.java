@@ -1,4 +1,4 @@
-package com.flink.example.stream.sink.jdbc;
+package com.flink.example.stream.sink.mysql;
 
 import com.flink.common.bean.SimpleUserBehavior;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -37,14 +37,13 @@ public class JdbcMysqlExample {
         };
         DataGeneratorSource<SimpleUserBehavior> generatorSource = new DataGeneratorSource<>(randomGenerator, 1L, 10L);
         DataStream<SimpleUserBehavior> source = env.addSource(generatorSource, "DataGeneratorSource")
-                .returns(Types.POJO(SimpleUserBehavior.class)).setParallelism(2);
+                .returns(Types.POJO(SimpleUserBehavior.class)).setParallelism(1);
 
         // 输出到控制台
         source.map(behavior -> behavior.getUserId() + "," + behavior.getTimestamp()).print().setParallelism(2);
 
         // 1. SQL 语句
-        //String dmlSQL = "insert into tb_user_active (user_id, active_time) values (?, ?)";
-        String dmlSQL = "INSERT INTO tb_user_active (user_id, active_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE active_time = ?";
+        String dmlSQL = "insert into tb_user_active (user_id, active_time) values (?, ?)";
 
         // 2. JDBC 执行参数构建器
         JdbcStatementBuilder<SimpleUserBehavior> statementBuilder = new JdbcStatementBuilder<SimpleUserBehavior>() {

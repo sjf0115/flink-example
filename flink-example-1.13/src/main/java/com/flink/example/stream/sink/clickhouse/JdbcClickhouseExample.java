@@ -1,4 +1,4 @@
-package com.flink.example.stream.sink.jdbc;
+package com.flink.example.stream.sink.clickhouse;
 
 import com.flink.common.bean.SimpleUserBehavior;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -15,13 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * 功能：通过 JDBC Sink 输出到 MySQL Upsert 写入模式
+ * 功能：通过 JDBC Sink 输出到 ClickHouse
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2024/8/25 18:18
  */
-public class JdbcMysqlUpsertExample {
+public class JdbcClickhouseExample {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -43,8 +43,7 @@ public class JdbcMysqlUpsertExample {
         source.map(behavior -> behavior.getUserId() + "," + behavior.getTimestamp()).print().setParallelism(2);
 
         // 1. SQL 语句
-        String dmlSQL = "INSERT INTO tb_user_active_upsert (user_id, active_time, active_cnt) VALUES (?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE active_time = ?, active_cnt = active_cnt + VALUES(active_cnt)";
+        String dmlSQL = "insert into tb_user_active (user_id, active_time) values (?, ?)";
 
         // 2. JDBC 执行参数构建器
         JdbcStatementBuilder<SimpleUserBehavior> statementBuilder = new JdbcStatementBuilder<SimpleUserBehavior>() {
@@ -54,8 +53,6 @@ public class JdbcMysqlUpsertExample {
                 Long timestamp = behavior.getTimestamp();
                 statement.setLong(1, userId);
                 statement.setLong(2, timestamp);
-                statement.setLong(3, 1L);
-                statement.setLong(4, timestamp);
             }
         };
 
@@ -69,8 +66,8 @@ public class JdbcMysqlUpsertExample {
         // 4. 连接配置
         JdbcConnectionOptions connectionOptions = new JdbcConnectionOptions
                 .JdbcConnectionOptionsBuilder()
-                .withUrl("jdbc:mysql://localhost:3306/flink")
-                .withDriverName("com.mysql.cj.jdbc.Driver")
+                .withUrl("dbc:clickhouse://localhost:8123/flink")
+                .withDriverName("com.clickhouse.jdbc.ClickHouseDriver")
                 .withUsername("root")
                 .withPassword("root")
                 .withConnectionCheckTimeoutSeconds(60) // 连接检查超时
@@ -78,6 +75,7 @@ public class JdbcMysqlUpsertExample {
 
         source.addSink(JdbcSink.sink(dmlSQL, statementBuilder, executionOptions, connectionOptions)).setParallelism(2);
 
-        env.execute("JdbcMysqlExample");
+
+        env.execute("JdbcClickHouseExample");
     }
 }
