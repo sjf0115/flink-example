@@ -15,13 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * 功能：通过 JDBC Sink 输出到 MySQL
+ * 功能：通过 JDBC Sink 输出到 MySQL Upsert 写入模式
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2024/8/25 18:18
  */
-public class JdbcMysqlExample {
+public class JdbcMysqlUpsertExample {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -43,8 +43,8 @@ public class JdbcMysqlExample {
         source.map(behavior -> behavior.getUserId() + "," + behavior.getTimestamp()).print().setParallelism(2);
 
         // 1. SQL 语句
-        //String dmlSQL = "insert into tb_user_active (user_id, active_time) values (?, ?)";
-        String dmlSQL = "INSERT INTO tb_user_active (user_id, active_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE active_time = ?";
+        String dmlSQL = "INSERT INTO tb_user_active_upsert (user_id, active_time, active_cnt) VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE active_time = ?, active_cnt = active_cnt + VALUES(active_cnt)";
 
         // 2. JDBC 执行参数构建器
         JdbcStatementBuilder<SimpleUserBehavior> statementBuilder = new JdbcStatementBuilder<SimpleUserBehavior>() {
@@ -54,6 +54,8 @@ public class JdbcMysqlExample {
                 Long timestamp = behavior.getTimestamp();
                 statement.setLong(1, userId);
                 statement.setLong(2, timestamp);
+                statement.setLong(3, 1L);
+                statement.setLong(4, timestamp);
             }
         };
 
