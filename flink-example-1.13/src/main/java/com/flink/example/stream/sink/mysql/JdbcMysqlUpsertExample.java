@@ -37,7 +37,7 @@ public class JdbcMysqlUpsertExample {
         };
         DataGeneratorSource<SimpleUserBehavior> generatorSource = new DataGeneratorSource<>(randomGenerator, 1L, 10L);
         DataStream<SimpleUserBehavior> source = env.addSource(generatorSource, "DataGeneratorSource")
-                .returns(Types.POJO(SimpleUserBehavior.class)).setParallelism(2);
+                .returns(Types.POJO(SimpleUserBehavior.class)).setParallelism(1);
 
         // 输出到控制台
         source.map(behavior -> behavior.getUserId() + "," + behavior.getTimestamp()).print().setParallelism(2);
@@ -78,6 +78,6 @@ public class JdbcMysqlUpsertExample {
 
         source.addSink(JdbcSink.sink(dmlSQL, statementBuilder, executionOptions, connectionOptions)).setParallelism(2);
 
-        env.execute("JdbcMysqlExample");
+        env.execute("JdbcMysqlUpsertExample");
     }
 }
