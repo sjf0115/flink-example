@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -24,23 +25,25 @@ import java.util.Properties;
  * 日期：2023/6/20 08:06
  */
 public class OffsetOnCheckpointsModeExample {
-    private static final Logger LOG = LoggerFactory.getLogger(NoCheckpointDisabledExample.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OffsetOnCheckpointsModeExample.class);
     private static final Gson gson = new GsonBuilder().create();
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
         // 开启 Checkpoint 用于容错 每30s触发一次Checkpoint 实际不用设置的这么大
         env.enableCheckpointing(30*1000);
+        // EXACTLY_ONCE 语义
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+
         // 配置失败重启策略：失败后最多重启3次 每次重启间隔10s
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 10000));
 
         // Kafka Consumer 配置
         Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:9092");
-        consumerProps.put("group.id", "word-count");
+        consumerProps.setProperty("bootstrap.servers", "localhost:9092");
+        consumerProps.setProperty("group.id", "word-count");
         // 关闭 Kafka 自动提交
-        consumerProps.put("enable.auto.commit", "false");
+        consumerProps.setProperty("enable.auto.commit", "false");
 
         // 创建 Kafka Consumer
         String consumerTopic = "word";

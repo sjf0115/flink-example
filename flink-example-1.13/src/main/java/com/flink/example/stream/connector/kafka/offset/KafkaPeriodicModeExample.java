@@ -29,20 +29,15 @@ public class KafkaPeriodicModeExample {
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
-        // 开启 Checkpoint 用于容错 每30s触发一次Checkpoint 实际不用设置的这么大
-        env.enableCheckpointing(30*1000);
         // 配置失败重启策略：失败后最多重启3次 每次重启间隔10s
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 10000));
 
         // Kafka Consumer 配置
         Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:9092");
-        consumerProps.put("group.id", "word-count");
-        // 开启 Kafka 自动提交
-        consumerProps.put("enable.auto.commit", "false");
-        // 每 5 秒提交一次
-        consumerProps.put("auto.commit.interval.ms", "5000");
+        consumerProps.setProperty("bootstrap.servers", "localhost:9092");
+        consumerProps.setProperty("group.id", "word-count");
+        consumerProps.setProperty("enable.auto.commit", "true");
+        consumerProps.setProperty("auto.commit.interval.ms", "5000"); // 每 5 秒提交一次
 
         // 创建 Kafka Consumer
         String consumerTopic = "word";
