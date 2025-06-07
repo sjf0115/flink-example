@@ -44,7 +44,7 @@ public class StateTTLExample {
             public Tuple2<String, Long> map(String uid) throws Exception {
                 long loginTime = System.currentTimeMillis();
                 String date = DateUtil.timeStamp2Date(loginTime);
-                LOG.info("用户 {} 在时间 {}({}) 进行登录", uid, loginTime, date);
+                LOG.info("用户 {} 在时间 {} 进行登录", uid, date);
                 return new Tuple2<String, Long>(uid, loginTime);
             }
         }).keyBy(new KeySelector<Tuple2<String, Long>, String>() {
@@ -87,7 +87,7 @@ public class StateTTLExample {
                 }
                 loginState.update(firstLoginTime);
                 String date = DateUtil.timeStamp2Date(firstLoginTime);
-                LOG.info("用户 {} 有效期内的首次登录时间为 {}({})", uid, firstLoginTime, date);
+                LOG.info("用户 {} 有效期内的首次登录时间为 {}", uid, date);
                 return new Tuple2<>(uid, firstLoginTime);
             }
         });
@@ -96,9 +96,3 @@ public class StateTTLExample {
         env.execute("StateTTLExample");
     }
 }
-// a
-// b
-// a
-// 一分钟后
-// a
-// b
