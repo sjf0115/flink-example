@@ -7,7 +7,6 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.runtime.state.storage.JobManagerCheckpointStorage;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
@@ -46,7 +45,6 @@ public class HashMapStateBackendExample {
             private ValueState<Long> counterState;
             @Override
             public void open(Configuration parameters) throws Exception {
-                super.open(parameters);
                 ValueStateDescriptor<Long> stateDescriptor = new ValueStateDescriptor<>("counter", Long.class);
                 counterState = getRuntimeContext().getState(stateDescriptor);
             }

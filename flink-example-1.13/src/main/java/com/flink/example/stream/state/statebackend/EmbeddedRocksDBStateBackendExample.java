@@ -7,7 +7,6 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
-import org.apache.flink.runtime.state.storage.JobManagerCheckpointStorage;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
@@ -16,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 /**
- * 功能：EmbeddedRocksDBStateBackend
+ * 功能：EmbeddedRocksDBStateBackend 示例
  * 作者：SmartSi
  * 博客：http://smartsi.club/
  * 公众号：大数据生态
@@ -28,15 +27,11 @@ public class EmbeddedRocksDBStateBackendExample {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        // 在事件时间模式下使用处理时间语义
-        env.getConfig().setAutoWatermarkInterval(0);
-
         // 设置状态后端
         env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
 
-        // 设置Checkpoint存储
-        env.enableCheckpointing(1000L);
-        env.getCheckpointConfig().setCheckpointStorage(new JobManagerCheckpointStorage());
+        // 开启Checkpoint
+        env.enableCheckpointing(30000L);
 
         DataStream<String> source = env.socketTextStream("localhost", 9100, "\n");
 
@@ -47,23 +42,22 @@ public class EmbeddedRocksDBStateBackendExample {
             }
         }).map(new RichMapFunction<String, Tuple2<String, Long>>() {
             // 计数器
-            private ValueState<Long> counterRocksDBState;
+            private ValueState<Long> counterState;
             @Override
             public void open(Configuration parameters) throws Exception {
-                super.open(parameters);
-                ValueStateDescriptor<Long> stateDescriptor = new ValueStateDescriptor<>("rocksDBStateCounter", Long.class);
-                counterRocksDBState = getRuntimeContext().getState(stateDescriptor);
+                ValueStateDescriptor<Long> stateDescriptor = new ValueStateDescriptor<>("counter", Long.class);
+                counterState = getRuntimeContext().getState(stateDescriptor);
             }
 
             @Override
             public Tuple2<String, Long> map(String key) throws Exception {
-                Long count = counterRocksDBState.value();
+                Long count = counterState.value();
                 if (Objects.equals(count, null)) {
                     count = 0L;
                 }
                 Long newCount = count + 1;
-                counterRocksDBState.update(newCount);
-                LOG.info("Key: {}, Count: {}", key, newCount);
+                counterState.update(newCount);
+                LOG.info("用户: {}, 登录次数: {}", key, newCount);
                 return new Tuple2<>(key, newCount);
             }
         });
@@ -82,10 +76,10 @@ public class EmbeddedRocksDBStateBackendExample {
 // c
 
 // 输出
-//Key: a, Count: 1
-//Key: a, Count: 2
-//Key: c, Count: 1
-//Key: d, Count: 1
-//Key: a, Count: 3
-//Key: d, Count: 2
-//Key: c, Count: 2
+//用户: a, 登录次数: 1
+//用户: a, 登录次数: 2
+//用户: c, 登录次数: 1
+//用户: d, 登录次数: 1
+//用户: a, 登录次数: 3
+//用户: d, 登录次数: 2
+//用户: c, 登录次数: 2
