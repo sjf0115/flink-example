@@ -53,36 +53,46 @@
             <version>${flink.version}</version>
         </dependency>
 
-        <!-- Flink Kafka Connector -->
+        <!-- 2.3 Flink Kafka Connector -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
 
-        <!-- 3. 数据库驱动 -->
+        <!-- 3. Flink StateBackend -->
 
-        <!-- 3.1 MySQL -->
+        <!-- 3.1 Flink Rocksdb StateBackend -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 4. 数据库驱动 -->
+
+        <!-- 4.1 MySQL -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
-        <!-- 3.2 ClickHouse -->
+        <!-- 4.2 ClickHouse -->
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
         </dependency>
 
-        <!-- 4. 公共 -->
+        <!-- 5. 公共 -->
         <dependency>
             <groupId>com.flink.example</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
         </dependency>
 
-        <!-- 5. 大数据核心库 -->
-        <!-- 5.1 流算法 -->
+        <!-- 6. 大数据核心库 -->
+        <!-- 6.1 流算法 -->
         <dependency>
             <groupId>org.apache.datasketches</groupId>
             <artifactId>datasketches-java</artifactId>
