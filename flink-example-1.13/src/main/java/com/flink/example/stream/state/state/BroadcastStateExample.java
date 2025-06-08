@@ -93,7 +93,7 @@ public class BroadcastStateExample {
 
         // 前一个行为
         private ValueState<String> prevActionState;
-        // 模式
+        // 模式 由于最多只有一个模式 key为Void
         private MapStateDescriptor<Void, Pattern> patternDesc;
 
         @Override
