@@ -2,8 +2,14 @@ package com.flink.example.stream.state.state;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.time.Time;
-import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.checkpoint.ListCheckpointed;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -18,23 +24,23 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 功能：通过 ListCheckpointed 实现 OperatorState 的在状态恢复示例
+ * 功能：通过 CheckpointedFunction 实现 OperatorState 的在状态恢复示例
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2023/4/18 上午8:00
  */
-public class RestoreOperatorStateListCheckpointedExample {
-    private static final Logger LOG = LoggerFactory.getLogger(RestoreOperatorStateListCheckpointedExample.class);
+public class RestoreOperatorStateCheckpointedFunctionExample {
+    private static final Logger LOG = LoggerFactory.getLogger(RestoreOperatorStateCheckpointedFunctionExample.class);
     // 用于输入ERROR信号抛出异常模拟脏数据导致作业Failover 只有这个时间戳之前的 ERROR 信号才会抛出异常
-    private static final Long errorTimeMillis = 1749566940000L;
+    private static final Long errorTimeMillis = 1749567120000L;
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
+        env.setParallelism(2);
 
-        // 每10s一次Checkpoint
-        env.enableCheckpointing(30 * 1000);
+        // 每20s一次Checkpoint
+        env.enableCheckpointing(20 * 1000);
         // 重启策略
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
                 3, // 重启最大次数
@@ -69,13 +75,14 @@ public class RestoreOperatorStateListCheckpointedExample {
         // 未实现状态恢复
         wordStream.addSink(new BufferingNoRestoreSink(4));
 
-        env.execute("RestoreOperatorStateListCheckpointedExample");
+        env.execute("RestoreOperatorStateCheckpointedFunctionExample");
     }
 
     // 自定义实现缓冲 Sink
-    public static class BufferingSink extends RichSinkFunction<String> implements ListCheckpointed<String> {
+    public static class BufferingSink extends RichSinkFunction<String> implements CheckpointedFunction {
         private List<String> bufferedWords;
         private final int threshold;
+        private transient ListState<String> listState;
 
         public BufferingSink(int threshold) {
             this.threshold = threshold;
@@ -98,21 +105,31 @@ public class RestoreOperatorStateListCheckpointedExample {
         }
 
         @Override
-        public List snapshotState(long checkpointId, long timestamp) throws Exception {
+        public void snapshotState(FunctionSnapshotContext context) throws Exception {
+            long checkpointId = context.getCheckpointId();
             int subTask = getRuntimeContext().getIndexOfThisSubtask();
+            // 清空上一次快照的状态
+            listState.clear();
+            // 生成新快照的状态
+            for (String word : bufferedWords) {
+                listState.add(word);
+            }
             LOG.info("snapshotState subTask: {}, checkpointId: {}, words: {}", subTask, checkpointId, bufferedWords.toString());
-            // 无需清空上一次快照的状态 直接返回 List 即可
-            return bufferedWords;
+
         }
 
         @Override
-        public void restoreState(List<String> state) throws Exception {
+        public void initializeState(FunctionInitializationContext context) throws Exception {
+            ListStateDescriptor<String> descriptor = new ListStateDescriptor<>("buffered-words", String.class);
+            listState = context.getOperatorStateStore().getListState(descriptor);
             int subTask = getRuntimeContext().getIndexOfThisSubtask();
-            // 从状态中恢复 初始化 bufferedWords 仅需要实现状态恢复逻辑
-            for (String word : state) {
-                bufferedWords.add(word);
+            // 从状态中恢复
+            if (context.isRestored()) {
+                for (String word : listState.get()) {
+                    bufferedWords.add(word);
+                }
+                LOG.info("initializeState subTask: {}, words: {}", subTask, bufferedWords.toString());
             }
-            LOG.info("initializeState subTask: {}, words: {}", subTask, bufferedWords.toString());
         }
     }
 
@@ -145,5 +162,9 @@ public class RestoreOperatorStateListCheckpointedExample {
 // a
 // b
 // b
-// ERROR // 等待整分输入 ERROR
+// b
+// a
+// ERROR
+// b
+// a
 // a
