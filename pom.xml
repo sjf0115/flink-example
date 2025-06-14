@@ -27,6 +27,7 @@
     <datasketches.version>6.2.0</datasketches.version>
     <mysql.version>8.0.22</mysql.version>
     <clickhouse.version>0.7.2</clickhouse.version>
+    <hadoop.version>2.10.1</hadoop.version>
   </properties>
 
   <dependencyManagement>
@@ -56,6 +57,14 @@
       </dependency>
 
       <!-- 大数据核心库 -->
+
+      <!-- Hadoop -->
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client</artifactId>
+        <version>${hadoop.version}</version>
+        <scope>provided</scope>
+      </dependency>
 
       <!-- 流算法 -->
       <dependency>

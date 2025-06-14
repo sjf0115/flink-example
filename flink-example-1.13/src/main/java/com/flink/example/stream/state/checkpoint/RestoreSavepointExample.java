@@ -4,11 +4,10 @@ import com.flink.common.bean.WordCount;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.runtime.state.storage.JobManagerCheckpointStorage;
+import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -16,30 +15,29 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.Properties;
 
 /**
- * 从 Checkpoint 中恢复作业
- * Created by wy on 2020/12/26.
+ * 功能：从 Savepoint 备份中恢复作业
+ * 作者：SmartSi
+ * CSDN博客：https://smartsi.blog.csdn.net/
+ * 公众号：大数据生态
+ * 日期：2025/6/14 12:03
  */
-public class RestoreCheckpointExample {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RestoreCheckpointExample.class);
+public class RestoreSavepointExample {
+    private static final Logger LOG = LoggerFactory.getLogger(RestoreSavepointExample.class);
     private static Gson gson = new GsonBuilder().create();
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
-        // 配置 状态后端
-        env.setStateBackend(new HashMapStateBackend());
-        // 配置 Checkpoint 每30s触发一次Checkpoint 实际不用设置的这么大
-        env.enableCheckpointing(30*1000);
-        env.getCheckpointConfig().setCheckpointStorage(new JobManagerCheckpointStorage());
-
-        // 配置失败重启策略：失败后最多重启3次 每次重启间隔10s
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 10000));
+        // 每300s一次Checkpoint 生产环境没有这么大为了演示效果
+        env.enableCheckpointing(300 * 1000);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        // FileSystemCheckpointStorage
+        String checkpointPath = "hdfs://localhost:9000/flink/checkpoint";
+        env.getCheckpointConfig().setCheckpointStorage(new FileSystemCheckpointStorage(checkpointPath));
 
         // 配置 Kafka Consumer
         Properties props = new Properties();
@@ -63,10 +61,6 @@ public class RestoreCheckpointExample {
                         WordCount wordCount = gson.fromJson(element, WordCount.class);
                         String word = wordCount.getWord();
                         LOG.info("word: {}, frequency: {}", word, wordCount.getFrequency());
-                        // 失败信号 模拟作业遇到脏数据
-                        if (Objects.equals(word, "ERROR")) {
-                            throw new RuntimeException("custom error flag, restart application");
-                        }
                         return wordCount;
                     }
                 }).uid("Map")
@@ -79,13 +73,7 @@ public class RestoreCheckpointExample {
                 .sum("frequency").uid("Sum");
 
         result.print().uid("Print");
-        env.execute("RestoreCheckpointExample");
+
+        env.execute("RestoreSavepointExample");
     }
 }
-// a
-// b
-// a
-// Checkpoint
-// a
-// c
-// ERROR
