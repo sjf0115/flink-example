@@ -1,6 +1,6 @@
 package com.flink.example.sql.tuning;
 
-import com.flink.example.stream.source.custom.SkewWordMockSource;
+import com.flink.example.stream.source.custom.WordMockSource;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
@@ -43,7 +43,7 @@ public class MiniBatchExample {
         configuration.setLong("table.exec.mini-batch.size", 50L);
 
         // 单词流 (word, 1)
-        DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new SkewWordMockSource());
+        DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new WordMockSource());
         // Stream 转 Table
         tEnv.createTemporaryView("words", source);
 

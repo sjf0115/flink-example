@@ -21,8 +21,8 @@ public class WordMockSource extends RichParallelSourceFunction<Tuple2<String, In
     // 速度 每秒多少条
     private long speed = 1000000;
     // 阈值 最多发送多条跳 -1表示无限制
-    //private long threshold = 50000000000L;
-    private long threshold = -1L;
+    private long threshold = 1L;
+    //private long threshold = -1L;
     private volatile boolean cancel = false;
     private List<String> words = Lists.newArrayList("spark", "flink");
 
