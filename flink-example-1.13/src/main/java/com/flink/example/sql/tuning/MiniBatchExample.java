@@ -10,6 +10,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import static org.apache.flink.table.api.Expressions.$;
+
 /**
  * 功能：MiniBatch 优化实战
  * 作者：SmartSi
@@ -35,22 +37,22 @@ public class MiniBatchExample {
         Configuration configuration = tEnv.getConfig().getConfiguration();
         configuration.setString("pipeline.name", MiniBatchExample.class.getSimpleName());
         // 开启 Checkpoint
-        configuration.setString("execution.checkpointing.interval", "20s");
+        configuration.setString("execution.checkpointing.interval", "180s");
 
         // 开启 MiniBatch
-        configuration.setBoolean("table.exec.mini-batch.enabled", true);
-        configuration.setString("table.exec.mini-batch.allow-latency", "60 s");
-        configuration.setLong("table.exec.mini-batch.size", 50L);
+        configuration.setString("table.exec.mini-batch.enabled", "true");
+        configuration.setString("table.exec.mini-batch.allow-latency", "30 s");
+        configuration.setString("table.exec.mini-batch.size", "10");
 
         // 单词流 (word, 1)
-        DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new WordMockSource());
+        DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new WordMockSource()).setParallelism(1);
         // Stream 转 Table
-        tEnv.createTemporaryView("words", source);
+        tEnv.createTemporaryView("words", source, $("word"), $("cnt"));
 
         // 创建输出表
         tEnv.executeSql("CREATE TABLE word_count (\n" +
-                "  word BIGINT COMMENT '单词',\n" +
-                "  count BIGINT COMMENT '出现次数'\n" +
+                "  word STRING COMMENT '单词',\n" +
+                "  cnt BIGINT COMMENT '出现次数'\n" +
                 ") WITH (\n" +
                 "  'connector' = 'print'\n" +
                 ")");

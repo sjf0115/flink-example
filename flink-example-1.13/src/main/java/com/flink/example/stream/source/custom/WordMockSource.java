@@ -19,12 +19,12 @@ public class WordMockSource extends RichParallelSourceFunction<Tuple2<String, In
 
     private static final Logger LOG = LoggerFactory.getLogger(WordMockSource.class);
     // 速度 每秒多少条
-    private long speed = 1000000;
+    private long speed = 1;
     // 阈值 最多发送多条跳 -1表示无限制
-    private long threshold = 1L;
-    //private long threshold = -1L;
+//    private long threshold = 1L;
+    private long threshold = -1L;
     private volatile boolean cancel = false;
-    private List<String> words = Lists.newArrayList("spark", "flink");
+    private List<String> words = Lists.newArrayList("flink");
 
     public WordMockSource() {
     }
