@@ -1,16 +1,12 @@
 package com.flink.example.stream.window.trigger;
 
-import com.flink.common.bean.WordCount;
 import com.flink.common.bean.WordCountTimestamp;
 import com.flink.common.utils.DateUtil;
 import com.google.common.collect.Lists;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -64,7 +60,7 @@ public class ContinuousEventTriggerExample {
                 .reduce(new ReduceFunction<WordCountTimestamp>() {
                     @Override
                     public WordCountTimestamp reduce(WordCountTimestamp v1, WordCountTimestamp v2) throws Exception {
-                        Integer count = v1.getCount() + v2.getCount();
+                        Integer count = v1.getFrequency() + v2.getFrequency();
                         String ids = v1.getId() + "," + v2.getId();
                         Long timestamp = Math.max(v1.getTimestamp(), v2.getTimestamp());
                         return new WordCountTimestamp(ids, v1.getWord(), count, timestamp);
@@ -113,7 +109,7 @@ public class ContinuousEventTriggerExample {
                 synchronized (ctx.getCheckpointLock()) {
                     WordCountTimestamp element = elements.get(index++);
                     LOG.info("id: {}, word: {}, count: {}, eventTime: {}|{}",
-                            element.getId(), element.getWord(), element.getCount(), element.getTimestamp(),
+                            element.getId(), element.getWord(), element.getFrequency(), element.getTimestamp(),
                             DateUtil.timeStamp2Date(element.getTimestamp()));
                     ctx.collect(element);
                 }

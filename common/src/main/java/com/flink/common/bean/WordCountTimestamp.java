@@ -1,22 +1,24 @@
 package com.flink.common.bean;
 
+import java.io.Serializable;
+
 /**
  * 带时间戳的 WordCount
  */
-public class WordCountTimestamp {
+public class WordCountTimestamp implements Serializable{
     private String id;
     private String word;
-    private int count;
+    private int frequency;
     private Long timestamp;
 
     public WordCountTimestamp() {
 
     }
 
-    public WordCountTimestamp(String id, String word, int count, Long timestamp) {
+    public WordCountTimestamp(String id, String word, int frequency, Long timestamp) {
         this.id = id;
         this.word = word;
-        this.count = count;
+        this.frequency = frequency;
         this.timestamp = timestamp;
     }
 
@@ -36,12 +38,12 @@ public class WordCountTimestamp {
         this.word = word;
     }
 
-    public int getCount() {
-        return count;
+    public int getFrequency() {
+        return frequency;
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    public void setFrequency(int frequency) {
+        this.frequency = frequency;
     }
 
     public Long getTimestamp() {
@@ -50,5 +52,15 @@ public class WordCountTimestamp {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return "WordCountTimestamp{" +
+                "id='" + id + '\'' +
+                ", word='" + word + '\'' +
+                ", frequency=" + frequency +
+                ", timestamp=" + timestamp +
+                '}';
     }
 }
