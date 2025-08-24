@@ -34,7 +34,6 @@ public class CustomPeriodicWatermarkGeneratorExample {
         DataStreamSource<WordCountTimestamp> source = env.addSource(new WordCountOutOfOrderSource());
         // 定义 Watermark 策略 - 自定义周期性 Watermark
         DataStream<WordCountTimestamp> words = source
-                // 使用自定义 WatermarkStrategy
                 .assignTimestampsAndWatermarks(
                         WatermarkStrategy.forGenerator(new WatermarkGeneratorSupplier<WordCountTimestamp>() {
                             @Override
