@@ -1,7 +1,6 @@
 package com.flink.example.stream.window.function;
 
 import com.flink.common.utils.DateUtil;
-import com.flink.example.stream.sink.print.PrintLogSinkFunction;
 import com.flink.example.stream.source.custom.SimpleTemperatureSource;
 import com.google.common.collect.Lists;
 import org.apache.flink.api.java.functions.KeySelector;
@@ -9,7 +8,6 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
@@ -34,7 +32,7 @@ public class ProcessWindowFunctionExample {
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(1000L);
+        env.setParallelism(1);
 
         // Stream of (id, temperature) 每10s输出一个传感器温度 最多输出20次
         DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new SimpleTemperatureSource(10*1000L, 20));
