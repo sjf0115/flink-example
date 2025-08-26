@@ -5,6 +5,7 @@ import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -32,7 +33,7 @@ public class WindowAggregateFunctionExample {
         DataStreamSource<Tuple2<String, Integer>> source = env.addSource(new SimpleTemperatureSource(10*1000L, 20));
 
         // 计算分钟内的平均温度
-        SingleOutputStreamOperator<Tuple2<String, Double>> stream = source
+        DataStream<Tuple2<String, Double>> stream = source
                 // 分组
                 .keyBy(new KeySelector<Tuple2<String, Integer>, String>() {
                     @Override
@@ -46,7 +47,7 @@ public class WindowAggregateFunctionExample {
                 .aggregate(new AggregateFunction<Tuple2<String, Integer>, Tuple3<String, Integer, Integer>, Tuple2<String, Double>>() {
                     @Override
                     public Tuple3<String, Integer, Integer> createAccumulator() {
-                        // 累加器 Key, Sum, Count
+                        // 累加器 Key, Sum, Count  中间状态
                         return Tuple3.of("", 0, 0);
                     }
 
