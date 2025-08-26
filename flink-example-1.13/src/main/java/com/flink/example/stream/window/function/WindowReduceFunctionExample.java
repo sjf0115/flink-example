@@ -1,11 +1,6 @@
 package com.flink.example.stream.window.function;
 
-import com.flink.example.stream.sink.print.PrintLogSinkFunction;
 import com.flink.example.stream.source.custom.SimpleWordSource;
-import com.flink.example.stream.source.custom.WordCountMockSource;
-import com.flink.example.stream.source.custom.WordCountOutOfOrderSource;
-import com.flink.example.stream.source.custom.WordMockSource;
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
@@ -14,7 +9,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
