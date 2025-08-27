@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * 功能：自定义窗口触发器
  * 作者：SmartSi
- * 博客：http://smartsi.club/
+ * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2021/7/2 下午5:42
  */
@@ -31,7 +31,7 @@ public class CustomCountTriggerExample {
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(1000L);
+        env.setParallelism(1);
 
         DataStream<String> source = env.socketTextStream("localhost", 9100, "\n");
 

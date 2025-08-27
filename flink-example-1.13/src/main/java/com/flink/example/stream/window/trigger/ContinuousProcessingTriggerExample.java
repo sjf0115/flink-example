@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 功能：周期性处理时间触发器
  * 作者：SmartSi
- * 博客：http://smartsi.club/
+ * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2021/8/30 下午10:43
  */

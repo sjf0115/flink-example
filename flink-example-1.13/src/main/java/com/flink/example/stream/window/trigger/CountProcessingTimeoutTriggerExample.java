@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 功能：带有超时时间的CountWindow
  * 作者：SmartSi
- * 博客：http://smartsi.club/
+ * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2021/7/3 上午10:57
  */
