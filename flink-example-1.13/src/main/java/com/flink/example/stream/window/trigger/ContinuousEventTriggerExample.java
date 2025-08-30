@@ -1,18 +1,14 @@
 package com.flink.example.stream.window.trigger;
 
 import com.flink.common.bean.WordCountTimestamp;
-import com.flink.common.utils.DateUtil;
 import com.flink.example.stream.source.custom.WordCountOutOfOrderSource;
-import com.google.common.collect.Lists;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.ContinuousEventTimeTrigger;
@@ -20,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
 
 /**
  * 功能：周期性事件时间触发器
@@ -51,7 +46,7 @@ public class ContinuousEventTriggerExample {
                                 })
                 );
 
-
+        // 窗口统计
         DataStream<WordCountTimestamp> result = words.keyBy(new KeySelector<WordCountTimestamp, String>() {
                     @Override
                     public String getKey(WordCountTimestamp wc) throws Exception {
@@ -60,7 +55,7 @@ public class ContinuousEventTriggerExample {
                 })
                 // 事件时间滚动窗口 滚动大小1分钟
                 .window(TumblingEventTimeWindows.of(Time.minutes(1)))
-                // 周期性事件时间触发器 每30秒触发一次计算
+                // 周期性事件时间触发器 每10秒触发一次计算
                 .trigger(ContinuousEventTimeTrigger.of(Time.seconds(10)))
                 // 求和
                 .reduce(new ReduceFunction<WordCountTimestamp>() {
@@ -78,57 +73,38 @@ public class ContinuousEventTriggerExample {
         result.print();
         env.execute("ContinuousEventTriggerExample");
     }
-
-    public static class OutOfOrderSource extends RichParallelSourceFunction<WordCountTimestamp> {
-        private static final Logger LOG = LoggerFactory.getLogger(OutOfOrderSource.class);
-        // Sleep 时间间隔 默认 1s
-        private Long sleepInterval = 1000L;
-        private volatile boolean cancel;
-        private List<WordCountTimestamp> elements = Lists.newArrayList(
-                // 行为唯一标识Id, 单词, 出现次数, 事件时间戳
-                new WordCountTimestamp("1", "a", 2, 1754841600000L), // 00:00:00
-                new WordCountTimestamp("2", "a", 1, 1754841660000L), // 00:01:00
-                new WordCountTimestamp("3", "a", 3, 1754842200000L), // 00:10:00
-                new WordCountTimestamp("4", "a", 2, 1754842210000L), // 00:10:10
-                new WordCountTimestamp("5", "a", 1, 1754842500000L), // 00:15:00
-                new WordCountTimestamp("6", "a", 2, 1754842495000L), // 00:14:55 迟到数据
-                new WordCountTimestamp("7", "a", 3, 1754841720000L), // 00:02:00 迟到数据
-                new WordCountTimestamp("8", "a", 1, 1754842560000L), // 00:16:00
-                new WordCountTimestamp("9", "a", 5, 1754842800000L), // 00:20:00
-                new WordCountTimestamp("10", "a", 4, 1754844015000L), // 00:40:15
-                new WordCountTimestamp("11", "a", 1, 1754844901000L), // 00:55:01
-                new WordCountTimestamp("12", "a", 6, 1754845215000L), // 01:00:15
-                new WordCountTimestamp("13", "a", 2, 1754849400000L),  // 02:10:00
-                new WordCountTimestamp("13", "a", 2, 1754871787000L)  // 08:23:07
-        );
-
-        public OutOfOrderSource() {
-        }
-
-        public OutOfOrderSource(Long sleepInterval) {
-            this.sleepInterval = sleepInterval;
-        }
-
-        @Override
-        public void run(SourceContext<WordCountTimestamp> ctx) throws Exception {
-            int index = 0;
-            while (!cancel && index < elements.size()) {
-                synchronized (ctx.getCheckpointLock()) {
-                    WordCountTimestamp element = elements.get(index++);
-                    LOG.info("id: {}, word: {}, count: {}, eventTime: {}|{}",
-                            element.getId(), element.getWord(), element.getFrequency(), element.getTimestamp(),
-                            DateUtil.timeStamp2Date(element.getTimestamp()));
-                    ctx.collect(element);
-                }
-                Thread.sleep(sleepInterval);
-            }
-        }
-
-        @Override
-        public void cancel() {
-            cancel = true;
-        }
-    }
-
 }
-
+//09:13:53,936 INFO  WordCountOutOfOrderSource [] - id: 1, word: a, frequency: 2, eventTime: 1662303772840|2022-09-04 23:02:52
+//09:13:54,943 INFO  WordCountOutOfOrderSource [] - id: 2, word: a, frequency: 1, eventTime: 1662303770844|2022-09-04 23:02:50
+//09:13:55,042 INFO  ContinuousEventTriggerExample [] - id: 1,2, count: 3, timestamp: 1662303772840
+//09:13:55,950 INFO  WordCountOutOfOrderSource [] - id: 3, word: a, frequency: 3, eventTime: 1662303773848|2022-09-04 23:02:53
+//09:13:55,978 INFO  ContinuousEventTriggerExample [] - id: 1,2,3, count: 6, timestamp: 1662303773848
+//09:13:56,952 INFO  WordCountOutOfOrderSource [] - id: 4, word: a, frequency: 2, eventTime: 1662303774866|2022-09-04 23:02:54
+//09:13:57,023 INFO  ContinuousEventTriggerExample [] - id: 1,2,3,4, count: 8, timestamp: 1662303774866
+//09:13:57,957 INFO  WordCountOutOfOrderSource [] - id: 5, word: a, frequency: 1, eventTime: 1662303777839|2022-09-04 23:02:57
+//09:13:57,963 INFO  ContinuousEventTriggerExample [] - id: 1,2,3,4,5, count: 9, timestamp: 1662303777839
+//09:13:58,963 INFO  WordCountOutOfOrderSource [] - id: 6, word: a, frequency: 2, eventTime: 1662303784887|2022-09-04 23:03:04
+//09:13:59,966 INFO  WordCountOutOfOrderSource [] - id: 7, word: a, frequency: 3, eventTime: 1662303776894|2022-09-04 23:02:56
+//09:14:00,037 INFO  ContinuousEventTriggerExample [] - id: 1,2,3,4,5,7, count: 12, timestamp: 1662303777839
+//09:14:00,972 INFO  WordCountOutOfOrderSource [] - id: 8, word: a, frequency: 1, eventTime: 1662303786891|2022-09-04 23:03:06
+//09:14:01,072 INFO  ContinuousEventTriggerExample [] - id: 6,8, count: 3, timestamp: 1662303786891
+//WordCountTimestamp{id='1,2,3,4,5,7', word='a', frequency=12, timestamp=1662303777839}
+//09:14:01,977 INFO  WordCountOutOfOrderSource [] - id: 9, word: a, frequency: 5, eventTime: 1662303778877|2022-09-04 23:02:58
+//09:14:02,984 INFO  WordCountOutOfOrderSource [] - id: 10, word: a, frequency: 4, eventTime: 1662303791904|2022-09-04 23:03:11
+//09:14:03,046 INFO  ContinuousEventTriggerExample [] - id: 6,8,10, count: 7, timestamp: 1662303791904
+//09:14:03,990 INFO  WordCountOutOfOrderSource [] - id: 11, word: a, frequency: 1, eventTime: 1662303795918|2022-09-04 23:03:15
+//09:14:04,087 INFO  ContinuousEventTriggerExample [] - id: 6,8,10,11, count: 8, timestamp: 1662303795918
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//09:14:04,994 INFO  WordCountOutOfOrderSource [] - id: 12, word: a, frequency: 6, eventTime: 1662303779883|2022-09-04 23:02:59
+//09:14:06,000 INFO  WordCountOutOfOrderSource [] - id: 13, word: a, frequency: 2, eventTime: 1662303846254|2022-09-04 23:04:06
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//WordCountTimestamp{id='6,8,10,11', word='a', frequency=8, timestamp=1662303795918}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
+//WordCountTimestamp{id='13', word='a', frequency=2, timestamp=1662303846254}
