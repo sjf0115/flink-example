@@ -18,6 +18,7 @@ import java.util.Properties;
 
 /**
  * 功能：Kafka 周期性自动提交
+ *  前提：flink 未开启 Checkpoint & kafka 设置自动提交
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -29,6 +30,8 @@ public class KafkaPeriodicModeExample {
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // Kafka 周期性自动提交模式不能开启 Checkpoint
+        // env.enableCheckpointing(10*1000);
         // 配置失败重启策略：失败后最多重启3次 每次重启间隔10s
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 10000));
 
