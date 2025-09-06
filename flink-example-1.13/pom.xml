@@ -54,6 +54,7 @@
             <scope>provided</scope>
         </dependency>
 
+
         <!-- 2. Flink Connector -->
 
         <!-- 2.1 Flink Redis Connector -->
@@ -76,9 +77,17 @@
             <version>${flink.version}</version>
         </dependency>
 
-        <!-- 3. Flink StateBackend -->
+        <!-- 3. Flink Format -->
+        <!-- 3.1 Flink Json Format -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-json</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
 
-        <!-- 3.1 Flink Rocksdb StateBackend -->
+        <!-- 4. Flink StateBackend -->
+
+        <!-- 4.1 Flink Rocksdb StateBackend -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
@@ -86,37 +95,37 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- 4. 数据库驱动 -->
+        <!-- 5. 数据库驱动 -->
 
-        <!-- 4.1 MySQL -->
+        <!-- 5.1 MySQL -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
-        <!-- 4.2 ClickHouse -->
+        <!-- 5.2 ClickHouse -->
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
         </dependency>
 
-        <!-- 5. 公共 -->
+        <!-- 6. 公共 -->
         <dependency>
             <groupId>com.flink.example</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
         </dependency>
 
-        <!-- 6. 大数据核心库 -->
+        <!-- 7. 大数据核心库 -->
 
-        <!-- 6.1 Hadoop -->
+        <!-- 7.1 Hadoop -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- 6.2 流算法 -->
+        <!-- 7.2 流算法 -->
         <dependency>
             <groupId>org.apache.datasketches</groupId>
             <artifactId>datasketches-java</artifactId>
