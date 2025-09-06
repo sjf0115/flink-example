@@ -29,7 +29,7 @@ public class ProcessTimeTumbleWindowTVFExample {
                 "  pid BIGINT COMMENT '商品Id',\n" +
                 "  cid BIGINT COMMENT '商品类目Id',\n" +
                 "  type STRING COMMENT '行为类型',\n" +
-                "  `timestamp` BIGINT COMMENT '行为时间',\n" +
+                "  `ts` BIGINT COMMENT '行为时间',\n" +
                 "  `time` STRING COMMENT '行为时间',\n" +
                 "  process_time AS PROCTIME() -- 处理时间\n" +
                 ") WITH (\n" +
