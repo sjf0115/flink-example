@@ -6,7 +6,7 @@ import org.apache.flink.table.api.TableEnvironment;
 /**
  * 功能：Kafka Connector 获取元数据示例
  * 作者：SmartSi
- * 博客：http://smartsi.club/
+ * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/4/9 下午11:52
  */
