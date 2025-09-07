@@ -1,11 +1,14 @@
 package com.flink.example.stream.window.trigger;
 
+import com.flink.common.bean.WordCount;
+import com.flink.example.stream.source.custom.WordCountMockSource;
+import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.triggers.ContinuousProcessingTimeTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,41 +23,38 @@ public class ContinuousProcessingTriggerExample {
     private static final Logger LOG = LoggerFactory.getLogger(ContinuousProcessingTriggerExample.class);
 
     public static void main(String[] args) throws Exception {
-//        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//        env.setParallelism(1);
-//
-//        // 数据源
-//        DataStreamSource<LoginUser> source = env.addSource(new UserLoginMockSource());
-//
-//        SingleOutputStreamOperator<Tuple2<Integer, Integer>> result = source
-//                .map(new MapFunction<LoginUser, Tuple2<Integer, Integer>>() {
-//                    @Override
-//                    public Tuple2<Integer, Integer> map(LoginUser user) throws Exception {
-//                        return Tuple2.of(user.getAppId(), 1);
-//                    }
-//                })
-//                .keyBy(new KeySelector<Tuple2<Integer, Integer>, Integer>() {
-//                    @Override
-//                    public Integer getKey(Tuple2<Integer, Integer> user) throws Exception {
-//                        return user.f1;
-//                    }
-//                })
-//                // 处理时间滚动窗口 滚动大小60s
-//                .window(TumblingProcessingTimeWindows.of(Time.minutes(1)))
-//                // 周期性处理时间触发器 每10s触发一次计算
-//                .trigger(CustomContinuousProcessingTimeTrigger.of(Time.seconds(10)))
-//                // 求和
-//                .reduce(new ReduceFunction<Tuple2<Integer, Integer>>() {
-//                    @Override
-//                    public Tuple2<Integer, Integer> reduce(Tuple2<Integer, Integer> value1, Tuple2<Integer, Integer> value2) throws Exception {
-//                        Integer result = value1.f1 + value2.f1;
-//                        return new Tuple2(value1.f0, result);
-//                    }
-//                });
-//
-//        // 打印日志并输出到控制台
-//        result.addSink(new PrintLogSinkFunction());
-//        env.execute("ContinuousProcessingTriggerExample");
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
+        // 随机生成单词
+        DataStream<WordCount> words = env.addSource(new WordCountMockSource(1, 65),"words");
+
+        // 滚动窗口 统计每分钟每个单词的个数，每10秒输出一次结果
+        DataStream<WordCount> result = words
+                // 根据单词分组
+                .keyBy(new KeySelector<WordCount, String>() {
+                    @Override
+                    public String getKey(WordCount wc) throws Exception {
+                        return wc.getWord();
+                    }
+                })
+                // 处理时间滚动窗口 窗口大小1分钟
+                .window(TumblingProcessingTimeWindows.of(Time.minutes(1)))
+                // 周期性处理时间触发器 每10秒触发一次计算
+                .trigger(ContinuousProcessingTimeTrigger.of(Time.seconds(10)))
+                // 求和
+                .reduce(new ReduceFunction<WordCount>() {
+                    @Override
+                    public WordCount reduce(WordCount wc1, WordCount wc2) throws Exception {
+                        long count = wc1.getFrequency() + wc2.getFrequency();
+                        LOG.info("word: {}, count: {}", wc1.getWord(), count);
+                        return new WordCount(wc1.getWord(), count);
+                    }
+                });
+
+        // 打印日志并输出到控制台
+        result.print();
+        env.execute("ContinuousProcessingTriggerExample");
     }
 }
 
