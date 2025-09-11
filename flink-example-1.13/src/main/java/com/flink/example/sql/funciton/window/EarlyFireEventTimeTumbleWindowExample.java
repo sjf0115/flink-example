@@ -48,9 +48,11 @@ public class EarlyFireEventTimeTumbleWindowExample {
 
         // 创建输出表
         tEnv.executeSql("CREATE TABLE user_behavior_cnt (\n" +
+                "  process_time STRING COMMENT '处理时间',\n" +
                 "  window_start STRING COMMENT '窗口开始时间',\n" +
                 "  window_end STRING COMMENT '窗口结束时间',\n" +
-                "  cnt BIGINT COMMENT '次数'\n" +
+                "  cnt BIGINT COMMENT '次数',\n" +
+                "  sets STRING COMMENT 'pid集合'\n" +
                 ") WITH (\n" +
                 "  'connector' = 'print'\n" +
                 ")");
@@ -58,9 +60,11 @@ public class EarlyFireEventTimeTumbleWindowExample {
         // 执行计算并输出
         tEnv.executeSql("INSERT INTO user_behavior_cnt\n" +
                 "SELECT\n" +
+                "  DATE_FORMAT(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH:mm:ss.SSS') AS process_time,\n" +
                 "  DATE_FORMAT(TUMBLE_START(ts_ltz, INTERVAL '1' MINUTE), 'yyyy-MM-dd HH:mm:ss') AS window_start,\n" +
                 "  DATE_FORMAT(TUMBLE_END(ts_ltz, INTERVAL '1' MINUTE), 'yyyy-MM-dd HH:mm:ss') AS window_end,\n" +
-                "  COUNT(*) AS cnt\n" +
+                "  COUNT(*) AS cnt,\n" +
+                "  LISTAGG(CAST(pid AS VARCHAR), ',') AS sets\n" +
                 "FROM user_behavior\n" +
                 "GROUP BY TUMBLE(ts_ltz, INTERVAL '1' MINUTE)");
     }
