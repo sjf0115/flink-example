@@ -6,13 +6,13 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：rows over 窗口
+ * 功能：range over 窗口
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2025/08/12 下午9:20
  */
-public class RowsOverWindowExample {
+public class RangeOverWindowEventTimeExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -23,7 +23,7 @@ public class RowsOverWindowExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", RowsOverWindowExample.class.getSimpleName());
+        config.setString("pipeline.name", RangeOverWindowEventTimeExample.class.getSimpleName());
 
         // 创建输入表
         tEnv.executeSql("CREATE TABLE shop_sales (\n" +
@@ -50,8 +50,8 @@ public class RowsOverWindowExample {
                 "  category STRING COMMENT '商品类目',\n" +
                 "  price BIGINT COMMENT '商品价格',\n" +
                 "  `time` STRING COMMENT '商品上架时间',\n" +
-                "  max_price BIGINT COMMENT '当前商品上架之前同类的最近3个商品中的最高价格',\n" +
-                "  recent_three_product STRING COMMENT '当前商品上架之前同类的最近3个商品'\n" +
+                "  max_price BIGINT COMMENT '比当前商品上架时间早3分钟的同类商品中的最高价格',\n" +
+                "  recent_three_product STRING COMMENT '比当前商品上架时间早3分钟的同类商品中的最高价格'\n" +
                 ") WITH (\n" +
                 "  'connector' = 'print'\n" +
                 ")");
@@ -60,8 +60,8 @@ public class RowsOverWindowExample {
         tEnv.executeSql("INSERT INTO shop_category_max_price\n" +
                 "SELECT\n" +
                 "    product_id, category, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
-                "    MAX(price) OVER (PARTITION BY category ORDER BY ts_ltz ROWS BETWEEN 2 preceding AND CURRENT ROW) AS max_price,\n" +
-                "    LISTAGG(CAST(product_id AS VARCHAR), ':') OVER (PARTITION BY category ORDER BY ts_ltz ROWS BETWEEN 2 preceding AND CURRENT ROW) AS recent_three_product\n" +
+                "    MAX(price) OVER (PARTITION BY category ORDER BY ts_ltz RANGE BETWEEN INTERVAL '3' MINUTE preceding AND CURRENT ROW) AS max_price,\n" +
+                "    LISTAGG(CAST(product_id AS VARCHAR), ':') OVER (PARTITION BY category ORDER BY ts_ltz RANGE BETWEEN INTERVAL '3' MINUTE preceding AND CURRENT ROW) AS recent_three_product\n" +
                 "FROM shop_sales");
     }
 }
@@ -90,11 +90,10 @@ public class RowsOverWindowExample {
 //+I[2003, 生鲜, 150, 2022-10-10 08:09:00, 150, 2001:2002:2003]
 //+I[2004, 生鲜, 70, 2022-10-10 08:11:00, 150, 2002:2003:2004]
 //+I[2005, 生鲜, 20, 2022-10-10 08:12:00, 150, 2003:2004:2005]
-//+I[1004, 图书, 10, 2022-10-10 08:13:00, 40, 1001:1002:1004]
+//+I[1004, 图书, 10, 2022-10-10 08:13:00, 10, 1004]
 //+I[2006, 生鲜, 120, 2022-10-10 08:14:00, 120, 2004:2005:2006]
-//+I[1006, 图书, 60, 2022-10-10 08:14:56, 60, 1002:1004:1006]
+//+I[1006, 图书, 60, 2022-10-10 08:14:56, 60, 1004:1006]
 //+I[1005, 图书, 20, 2022-10-10 08:15:00, 60, 1004:1006:1005]
-
 
 // ----------------------------------------------------------------------------
 
