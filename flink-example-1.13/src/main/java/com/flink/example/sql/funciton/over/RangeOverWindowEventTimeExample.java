@@ -115,11 +115,11 @@ public class RangeOverWindowEventTimeExample {
 //          'json.fail-on-missing-field' = 'true'
 //));
 
+
 //INSERT INTO shop_category_max_price
 //SELECT
 //    product_id, category, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,
-//    MAX(price) OVER (PARTITION BY category ORDER BY ts_ltz ROWS BETWEEN 2 preceding AND CURRENT ROW) AS max_price,
-//    LISTAGG(CAST(product_id AS VARCHAR), ',') OVER (PARTITION BY category ORDER BY ts_ltz ROWS BETWEEN 2 preceding AND CURRENT ROW) AS recent_three_product
+//    MAX(price) OVER (PARTITION BY category ORDER BY ts_ltz RANGE BETWEEN INTERVAL '3' MINUTE preceding AND CURRENT ROW) AS max_price,
+//    LISTAGG(CAST(product_id AS VARCHAR), ':') OVER (PARTITION BY category ORDER BY ts_ltz RANGE BETWEEN INTERVAL '3' MINUTE preceding AND CURRENT ROW) AS recent_three_product
 //FROM shop_sales
-
 
