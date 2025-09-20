@@ -16,7 +16,7 @@ import java.time.Duration;
 import static org.apache.flink.table.api.Expressions.$;
 
 /**
- * 功能：窗口 TopN 直接作用在窗口 TVF 上
+ * 功能：在窗口 TVF 上计算 TopN
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -72,17 +72,20 @@ public class WindowTopTVFExample {
         );
 
         // 执行计算
-        TableResult result = tEnv.executeSql("SELECT\n" +
-                "  window_start, window_end,\n" +
-                "  product_id, category, price, `time`, row_num\n" +
+        TableResult result = tEnv.executeSql("SELECT window_start, window_end, category, price, cnt, row_num\n" +
                 "FROM (\n" +
+                "  SELECT\n" +
+                "    window_start, window_end, category, price, cnt,\n" +
+                "    ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num\n" +
+                "  FROM (\n" +
                 "    SELECT\n" +
-                "      window_start, window_end, product_id, category, price,\n" +
-                "      DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
-                "      ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num\n" +
+                "      window_start, window_end, category,\n" +
+                "      SUM(price) AS price, COUNT(*) AS cnt\n" +
                 "    FROM TABLE(\n" +
                 "      TUMBLE(TABLE shop_sales, DESCRIPTOR(ts_ltz), INTERVAL '5' MINUTES)\n" +
                 "    )\n" +
+                "    GROUP BY window_start, window_end, category\n" +
+                "  )\n" +
                 ") WHERE row_num <= 3");
 
         // 输出
@@ -92,13 +95,18 @@ public class WindowTopTVFExample {
 
 
 
-//SELECT
-//    window_start, window_end,
-//    product_id, category, price, `time`, row_num
-//FROM (
-//    SELECT
-//        window_start, window_end, product_id, category, price,
-//        DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,
-//        ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num
-//    FROM TUMBLE(TABLE shop_sales, DESCRIPTOR(ts_ltz), INTERVAL '5' MINUTES)
-//) WHERE row_num <= 3
+// SELECT window_start, window_end, category, price, cnt, row_num
+// FROM (
+//   SELECT
+//     window_start, window_end, category, price, cnt,
+//     ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num
+//   FROM (
+//     SELECT
+//       window_start, window_end, category,
+//       SUM(price) AS price, COUNT(*) AS cnt
+//     FROM TABLE(
+//       TUMBLE(TABLE shop_sales, DESCRIPTOR(ts_ltz), INTERVAL '5' MINUTES)
+//     )
+//     GROUP BY window_start, window_end, category
+//   )
+// ) WHERE row_num <= 3
