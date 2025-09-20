@@ -1,4 +1,4 @@
-package com.flink.example.sql.funciton.top;
+package com.flink.example.sql.table;
 
 import com.flink.common.bean.ShopSales;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
@@ -16,13 +16,13 @@ import java.time.Duration;
 import static org.apache.flink.table.api.Expressions.$;
 
 /**
- * 功能：TopN 示例 - 无排名输出
+ * 功能：Table & DataStream 混合使用
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
-public class TopWithoutRankExample {
+public class TableStreamExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -35,7 +35,7 @@ public class TopWithoutRankExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", TopWithoutRankExample.class.getSimpleName());
+        config.setString("pipeline.name", TableStreamExample.class.getSimpleName());
 
         // 源数据流
         DataStreamSource<ShopSales> sourceStream = env.fromElements(
