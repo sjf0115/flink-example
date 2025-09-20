@@ -1,4 +1,4 @@
-package com.flink.example.sql.funciton.tvf;
+package com.flink.example.sql.query.tvf;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.EnvironmentSettings;

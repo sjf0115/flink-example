@@ -1,4 +1,4 @@
-package com.flink.example.sql.funciton.window;
+package com.flink.example.sql.query.window;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.EnvironmentSettings;
