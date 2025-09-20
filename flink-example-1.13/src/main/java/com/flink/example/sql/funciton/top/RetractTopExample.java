@@ -16,13 +16,13 @@ import java.time.Duration;
 import static org.apache.flink.table.api.Expressions.$;
 
 /**
- * 功能：TopN 示例 - 无排名输出
+ * 功能：TopN 示例 - RetractStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
-public class TopWithoutRankExample {
+public class RetractTopExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -35,7 +35,7 @@ public class TopWithoutRankExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", TopWithoutRankExample.class.getSimpleName());
+        config.setString("pipeline.name", RetractTopExample.class.getSimpleName());
 
         // 源数据流
         DataStreamSource<ShopSales> sourceStream = env.fromElements(
@@ -72,14 +72,19 @@ public class TopWithoutRankExample {
         );
 
         // 执行计算
-        TableResult result = tEnv.executeSql("SELECT\n" +
-                "  category, product_id, price, `time`\n" +
+        TableResult result = tEnv.executeSql("SELECT category, product_id, order_amt, `time`, row_num\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
-                "    category, product_id, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
-                "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS row_num\n" +
-                "  FROM shop_sales\n" +
-                ")\n" +
+                "    category, product_id, order_amt, `time`,\n" +
+                "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY order_amt DESC) AS row_num\n" +
+                "  FROM (\n" +
+                "      SELECT\n" +
+                "          category, product_id, SUM(price) AS order_amt,\n" +
+                "          MAX(DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss')) AS `time`\n" +
+                "      FROM shop_sales\n" +
+                "      GROUP BY category, product_id\n" +
+                "  ) AS a1\n" +
+                ") AS b1\n" +
                 "WHERE row_num <= 3");
 
         // 输出

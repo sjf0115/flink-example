@@ -6,13 +6,13 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：TopN 示例 - AppendFastStrategy
+ * 功能：TopN 纯 SQL 版本示例 - AppendFastStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
-public class AppendFastTopNExample {
+public class AppendFastTopSQLExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -25,7 +25,7 @@ public class AppendFastTopNExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", AppendFastTopNExample.class.getSimpleName());
+        config.setString("pipeline.name", AppendFastTopSQLExample.class.getSimpleName());
 
         // 创建输入表
         tEnv.executeSql("CREATE TABLE shop_sales (\n" +

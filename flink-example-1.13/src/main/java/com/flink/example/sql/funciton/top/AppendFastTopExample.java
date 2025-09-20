@@ -16,13 +16,13 @@ import java.time.Duration;
 import static org.apache.flink.table.api.Expressions.$;
 
 /**
- * 功能：TopN 示例 - 无排名输出
+ * 功能：TopN 示例 - AppendFastStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
-public class TopWithoutRankExample {
+public class AppendFastTopExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -35,7 +35,7 @@ public class TopWithoutRankExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", TopWithoutRankExample.class.getSimpleName());
+        config.setString("pipeline.name", AppendFastTopExample.class.getSimpleName());
 
         // 源数据流
         DataStreamSource<ShopSales> sourceStream = env.fromElements(
@@ -73,7 +73,7 @@ public class TopWithoutRankExample {
 
         // 执行计算
         TableResult result = tEnv.executeSql("SELECT\n" +
-                "  category, product_id, price, `time`\n" +
+                "  category, product_id, price, `time`, row_num\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
                 "    category, product_id, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +

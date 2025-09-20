@@ -6,13 +6,13 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：TopN 示例 - RetractStrategy
+ * 功能：TopN 示例 - UpdateFastStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
-public class RetractTopNExample {
+public class UpdateFastTopSQLExample {
     public static void main(String[] args) {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -25,7 +25,7 @@ public class RetractTopNExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", RetractTopNExample.class.getSimpleName());
+        config.setString("pipeline.name", UpdateFastTopSQLExample.class.getSimpleName());
 
         // 创建输入表
         tEnv.executeSql("CREATE TABLE shop_sales (\n" +
@@ -66,9 +66,10 @@ public class RetractTopNExample {
                 "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY order_amt DESC) AS row_num\n" +
                 "  FROM (\n" +
                 "      SELECT\n" +
-                "          category, product_id, SUM(price) AS order_amt,\n" +
+                "          category, product_id, SUM(price) FILTER(WHERE price >= 0) AS order_amt,\n" +
                 "          MAX(DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss')) AS `time`\n" +
                 "      FROM shop_sales\n" +
+                "      WHERE price >= 0\n" +
                 "      GROUP BY category, product_id\n" +
                 "  ) AS a1\n" +
                 ") AS b1\n" +
