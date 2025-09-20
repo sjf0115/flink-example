@@ -6,7 +6,7 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：TopN 示例 - 无排名输出
+ * 功能：TopN 示例 纯 SQL 版本 - 无排名输出
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -87,7 +87,14 @@ public class TopWithoutRankSQLExample {
 //          'json.fail-on-missing-field' = 'true'
 //))
 
-
+//SELECT category, product_id, price, `time`
+//FROM (
+//    SELECT
+//            category, product_id, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,
+//    ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS row_num
+//    FROM shop_sales
+//)
+//WHERE row_num <= 3
 
 //-------------------------------------------------------------------------
 // 输入数据
@@ -106,3 +113,15 @@ public class TopWithoutRankSQLExample {
 //"1007,图书,90,1665361080000" // 2022-10-10 08:18:00
 
 // 输出
+//+I[图书, 1001, 40, 2022-10-10 08:05:00]
+//+I[生鲜, 2001, 80, 2022-10-10 08:06:00]
+//+I[图书, 1002, 30, 2022-10-10 08:07:00]
+//+I[生鲜, 2002, 80, 2022-10-10 08:08:00]
+//+I[生鲜, 2003, 150, 2022-10-10 08:09:00]
+//+I[图书, 1003, 100, 2022-10-10 08:05:50]
+//-D[生鲜, 2002, 80, 2022-10-10 08:08:00]
+//+I[生鲜, 2006, 120, 2022-10-10 08:14:00]
+//-D[图书, 1002, 30, 2022-10-10 08:07:00]
+//+I[图书, 1006, 60, 2022-10-10 08:14:56]
+//-D[图书, 1001, 40, 2022-10-10 08:05:00]
+//+I[图书, 1007, 90, 2022-10-10 08:18:00]

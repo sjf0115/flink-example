@@ -6,7 +6,7 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：TopN 示例 - UpdateFastStrategy
+ * 功能：TopN 示例 - 纯 SQL 版本 - UpdateFastStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态

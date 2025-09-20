@@ -6,7 +6,7 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**
- * 功能：TopN 示例 - RetractStrategy
+ * 功能：TopN 示例 - 纯SQL版本 - RetractStrategy
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
