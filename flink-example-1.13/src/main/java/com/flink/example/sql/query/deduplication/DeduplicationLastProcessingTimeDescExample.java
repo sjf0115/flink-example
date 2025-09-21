@@ -57,10 +57,12 @@ public class DeduplicationLastProcessingTimeDescExample {
         );
 
         // 执行计算
-        Table table = tEnv.sqlQuery("SELECT category, product_id, price, `time`, row_num\n" +
+        Table table = tEnv.sqlQuery("SELECT category, product_id, price, event_time, proc_time, row_num\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
-                "    category, product_id, price, DATE_FORMAT(proc_time, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
+                "    category, product_id, price,\n" +
+                "    FROM_UNIXTIME(`timestamp`/1000, 'yyyy-MM-dd HH:mm:ss') AS event_time,\n" +
+                "    DATE_FORMAT(proc_time, 'yyyy-MM-dd HH:mm:ss') AS proc_time,\n" +
                 "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY proc_time DESC) AS row_num\n" +
                 "  FROM shop_sales\n" +
                 ")\n" +
