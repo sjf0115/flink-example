@@ -8,8 +8,10 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
+import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.types.Row;
 
 import java.time.Duration;
 
@@ -18,14 +20,15 @@ import static org.apache.flink.table.api.Expressions.$;
 /**
  * 功能：TopN 示例 - 无排名输出
  * 作者：SmartSi
- * CSDN博客：https://smartsi.blog.csdn.net/
+ * CSDN博客：https://smartsi.blog.csdn.net/article/details/151902584
  * 公众号：大数据生态
  * 日期：2022/10/18 上午8:20
  */
 public class TopWithoutRankExample {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
 
         // Table 执行环境
         EnvironmentSettings settings = EnvironmentSettings
@@ -72,7 +75,7 @@ public class TopWithoutRankExample {
         );
 
         // 执行计算
-        TableResult result = tEnv.executeSql("SELECT\n" +
+        Table table = tEnv.sqlQuery("SELECT\n" +
                 "  category, product_id, price, `time`\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
@@ -83,6 +86,8 @@ public class TopWithoutRankExample {
                 "WHERE row_num <= 3");
 
         // 输出
-        result.print();
+        DataStream<Row> stream = tEnv.toChangelogStream(table);
+        stream.print();
+        env.execute("TopWithoutRankExample");
     }
 }
