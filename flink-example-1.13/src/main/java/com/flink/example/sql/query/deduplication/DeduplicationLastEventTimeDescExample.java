@@ -28,6 +28,7 @@ public class DeduplicationLastEventTimeDescExample {
     public static void main(String[] args) throws Exception {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
                 .inStreamingMode()
