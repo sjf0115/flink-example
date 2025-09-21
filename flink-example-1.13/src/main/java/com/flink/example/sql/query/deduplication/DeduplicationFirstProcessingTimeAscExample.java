@@ -18,7 +18,6 @@ import static org.apache.flink.table.api.Expressions.$;
 
 /**
  * 功能：Deduplication 保留第一行策略 -- 处理时间升序
- *          回撤流
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -61,10 +60,12 @@ public class DeduplicationFirstProcessingTimeAscExample {
         );
 
         // 执行计算
-        Table table = tEnv.sqlQuery("SELECT category, product_id, price, `time`, row_num\n" +
+        Table table = tEnv.sqlQuery("SELECT category, product_id, price, event_time, proc_time, row_num\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
-                "    category, product_id, price, DATE_FORMAT(proc_time, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
+                "    category, product_id, price, " +
+                "    FROM_UNIXTIME(`timestamp`/1000, 'yyyy-MM-dd HH:mm:ss') AS event_time,\n" +
+                "    DATE_FORMAT(proc_time, 'yyyy-MM-dd HH:mm:ss') AS proc_time,\n" +
                 "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY proc_time ASC) AS row_num\n" +
                 "  FROM shop_sales\n" +
                 ")\n" +
