@@ -1,4 +1,4 @@
-package com.flink.example.sql.query.windowTop;
+package com.flink.example.sql.query.deduplication;
 
 import com.flink.common.bean.ShopSales;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
@@ -8,26 +8,27 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
+import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.types.Row;
 
 import java.time.Duration;
 
 import static org.apache.flink.table.api.Expressions.$;
 
 /**
- * 功能：在窗口 TVF 上计算 TopN
+ * 功能：Deduplication 保留第一行策略 -- 事件时间升序
+ *          回撤流
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
- * 日期：2022/10/19 上午8:03
+ * 日期：2025/08/12 下午9:20
  */
-public class WindowTopTVFExample {
-    public static void main(String[] args) {
+public class DeduplicationFirstEventTimeAscExample {
+    public static void main(String[] args) throws Exception {
         // 执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-        // Table 执行环境
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
                 .inStreamingMode()
@@ -35,7 +36,7 @@ public class WindowTopTVFExample {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         Configuration config = tEnv.getConfig().getConfiguration();
         // 设置作业名称
-        config.setString("pipeline.name", WindowTopTVFExample.class.getSimpleName());
+        config.setString("pipeline.name", DeduplicationFirstEventTimeAscExample.class.getSimpleName());
 
         // 源数据流
         DataStreamSource<ShopSales> sourceStream = env.fromElements(
@@ -44,7 +45,7 @@ public class WindowTopTVFExample {
                 new ShopSales(1002, "图书", 30, 1665360420000L), // 2022-10-10 08:07:00
                 new ShopSales(2002, "生鲜", 80, 1665360480000L), // 2022-10-10 08:08:00
                 new ShopSales(2003, "生鲜", 150, 1665360540000L), // 2022-10-10 08:09:00
-                new ShopSales(1003, "图书", 100, 1665360350000L), // 2022-10-10 08:05:50  迟到
+                new ShopSales(1003, "图书", 100, 1665360290000L), // 2022-10-10 08:04:50  迟到
                 new ShopSales(2004, "生鲜", 70, 1665360660000L), // 2022-10-10 08:11:00
                 new ShopSales(2005, "生鲜", 20, 1665360720000L), // 2022-10-10 08:12:00
                 new ShopSales(1004, "图书", 10, 1665360780000L), // 2022-10-10 08:13:00
@@ -64,7 +65,6 @@ public class WindowTopTVFExample {
                         return sale.getTimestamp();
                     }
                 }));
-        shopSalesStream.print();
 
         // 注册表
         tEnv.createTemporaryView("shop_sales", shopSalesStream,
@@ -72,38 +72,18 @@ public class WindowTopTVFExample {
         );
 
         // 执行计算
-        tEnv.executeSql("SELECT window_start, window_end, category, price, cnt, row_num\n" +
+        Table table = tEnv.sqlQuery("SELECT category, product_id, price, `time`, row_num\n" +
                 "FROM (\n" +
                 "  SELECT\n" +
-                "    window_start, window_end, category, price, cnt,\n" +
-                "    ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num\n" +
-                "  FROM (\n" +
-                "    SELECT\n" +
-                "      window_start, window_end, category,\n" +
-                "      SUM(price) AS price, COUNT(*) AS cnt\n" +
-                "    FROM TABLE(\n" +
-                "      TUMBLE(TABLE shop_sales, DESCRIPTOR(ts_ltz), INTERVAL '5' MINUTES)\n" +
-                "    )\n" +
-                "    GROUP BY window_start, window_end, category\n" +
-                "  )\n" +
-                ") WHERE row_num <= 3").print();
+                "    category, product_id, price, DATE_FORMAT(ts_ltz, 'yyyy-MM-dd HH:mm:ss') AS `time`,\n" +
+                "    ROW_NUMBER() OVER (PARTITION BY category ORDER BY ts_ltz ASC) AS row_num\n" +
+                "  FROM shop_sales\n" +
+                ")\n" +
+                "WHERE row_num = 1");
+        // 输出
+        DataStream<Row> stream = tEnv.toChangelogStream(table);
+        stream.print();
+        env.execute("DeduplicationFirstEventTimeAscExample");
     }
 }
 
-
-
-// SELECT window_start, window_end, category, price, cnt, row_num
-// FROM (
-//   SELECT
-//     window_start, window_end, category, price, cnt,
-//     ROW_NUMBER() OVER (PARTITION BY window_start, window_end ORDER BY price DESC) AS row_num
-//   FROM (
-//     SELECT
-//       window_start, window_end, category,
-//       SUM(price) AS price, COUNT(*) AS cnt
-//     FROM TABLE(
-//       TUMBLE(TABLE shop_sales, DESCRIPTOR(ts_ltz), INTERVAL '5' MINUTES)
-//     )
-//     GROUP BY window_start, window_end, category
-//   )
-// ) WHERE row_num <= 3
