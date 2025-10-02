@@ -11,6 +11,7 @@
     <module>flink-example-1.20</module>
     <module>flink-example-1.13</module>
     <module>common</module>
+      <module>cdc-3.x</module>
   </modules>
 
   <name>flink-example</name>
