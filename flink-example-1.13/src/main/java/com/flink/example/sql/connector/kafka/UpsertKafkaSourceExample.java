@@ -8,7 +8,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 /**
  * 功能：Upsert Kafka Source 示例
  * 作者：SmartSi
- * CSDN博客：https://smartsi.blog.csdn.net/
+ * CSDN博客：https://smartsi.blog.csdn.net/article/details/153539594
  * 公众号：大数据生态
  * 日期：2025/08/12 下午9:20
  */
