@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 功能：WriteAheadSink 示例
  * 作者：SmartSi
- * CSDN博客：https://smartsi.blog.csdn.net/
+ * CSDN博客：https://smartsi.blog.csdn.net/article/details/153592550
  * 公众号：大数据生态
  * 日期：2022/8/20 下午3:29
  */
@@ -110,10 +110,11 @@ public class StdOutWriteAheadSinkExample {
             super.close();
         }
 
+        // 核心实现逻辑
+        // 调用时机：每次 Checkpoint 完成之后通过 notifyCheckpointComplete 调用该方法
         @Override
         protected boolean sendValues(Iterable<String> words, long checkpointId, long timestamp) throws Exception {
             // 输出到外部系统 在这为 StdOut 标准输出
-            // 每次 Checkpoint 完成之后通过 notifyCheckpointComplete 调用该方法
             int subtask = getRuntimeContext().getIndexOfThisSubtask();
             for (String word : words) {
                 LOG.info("checkpointId {} (subTask = {}) send word: {}", checkpointId, subtask, word);

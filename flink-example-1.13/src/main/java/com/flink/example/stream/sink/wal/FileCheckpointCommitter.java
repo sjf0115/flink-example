@@ -13,7 +13,7 @@ import java.nio.file.Paths;
  * 功能：FileCheckpointCommitter
  *      将检查点提交到文件中
  * 作者：SmartSi
- * CSDN博客：https://blog.csdn.net/sunnyyoona
+ * CSDN博客：https://smartsi.blog.csdn.net/article/details/130550211
  * 公众号：大数据生态
  * 日期：2022/8/19 下午11:32
  */
