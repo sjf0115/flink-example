@@ -2,7 +2,9 @@ package com.flink.common.bean;
 
 import com.google.gson.annotations.SerializedName;
 
-public class ShopSales {
+import java.io.Serializable;
+
+public class ShopSales implements Serializable {
     @SerializedName("product_id")
     private Integer productId;
     private String category;
