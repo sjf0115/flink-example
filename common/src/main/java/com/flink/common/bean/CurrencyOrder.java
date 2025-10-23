@@ -3,24 +3,24 @@ package com.flink.common.bean;
 import java.io.Serializable;
 
 public class CurrencyOrder implements Serializable {
-    private String orderTime;
+    private Long orderTime;
     private double amount;
     private String currency;
 
     public CurrencyOrder() {
     }
 
-    public CurrencyOrder(String orderTime, double amount, String currency) {
+    public CurrencyOrder(Long orderTime, double amount, String currency) {
         this.orderTime = orderTime;
         this.amount = amount;
         this.currency = currency;
     }
 
-    public String getOrderTime() {
+    public Long getOrderTime() {
         return orderTime;
     }
 
-    public void setOrderTime(String orderTime) {
+    public void setOrderTime(Long orderTime) {
         this.orderTime = orderTime;
     }
 

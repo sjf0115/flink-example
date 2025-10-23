@@ -3,24 +3,24 @@ package com.flink.common.bean;
 import java.io.Serializable;
 
 public class CurrencyRates implements Serializable {
-    private String updateTime;
+    private Long updateTime;
     private String currency;
     private double rate;
 
     public CurrencyRates() {
     }
 
-    public CurrencyRates(String updateTime, String currency, double rate) {
+    public CurrencyRates(Long updateTime, String currency, double rate) {
         this.updateTime = updateTime;
         this.currency = currency;
         this.rate = rate;
     }
 
-    public String getUpdateTime() {
+    public Long getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(String updateTime) {
+    public void setUpdateTime(Long updateTime) {
         this.updateTime = updateTime;
     }
 
