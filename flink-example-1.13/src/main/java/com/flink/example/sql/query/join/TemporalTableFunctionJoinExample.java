@@ -53,19 +53,19 @@ public class TemporalTableFunctionJoinExample {
         ).assignTimestampsAndWatermarks(
                 WatermarkStrategy.<CurrencyRates>forBoundedOutOfOrderness(Duration.ofSeconds(5))
                         .withTimestampAssigner((rate, updateTime) -> rate.getUpdateTime())
-        );
+        ).setParallelism(1);
 
         // 订单流
         DataStream<CurrencyOrder> orderStream = env.fromElements(
                 new CurrencyOrder(1761099300000L, 2, "Euro"), // 2025-10-22 10:15:00
                 new CurrencyOrder(1761100200000L, 1, "USD"), // 2025-10-22 10:30:00
                 new CurrencyOrder(1761100320000L, 50, "Yen"), // 2025-10-22 10:32:00
-                new CurrencyOrder(1761101520000L, 3, "Euro"), // 2025-10-22 10:52:00
-                new CurrencyOrder(1761102240000L, 5, "USD") // 2025-10-22 11:04:00
+                new CurrencyOrder(1761103920000L, 3, "Euro"), // 2025-10-22 11:32:00
+                new CurrencyOrder(1761105000000L, 5, "Pounds") // 2025-10-22 11:50:00
         ).assignTimestampsAndWatermarks(
                 WatermarkStrategy.<CurrencyOrder>forBoundedOutOfOrderness(Duration.ofSeconds(5))
                         .withTimestampAssigner((order, orderTime) -> order.getOrderTime())
-        );
+        ).setParallelism(1);
 
         // 注册表
         tEnv.createTemporaryView("currency_rates", ratesStream,
@@ -83,8 +83,8 @@ public class TemporalTableFunctionJoinExample {
 
         // 执行计算
         Table table = tEnv.sqlQuery("SELECT\n" +
-                "  DATE_FORMAT(o.order_ltz, 'yyyy-MM-dd HH:mm:ss') AS order_time, o.currency, o.amount,\n" +
-                "  r.rate, DATE_FORMAT(r.rate_ltz, 'yyyy-MM-dd HH:mm:ss') AS rate_time,\n" +
+                "  FROM_UNIXTIME(o.order_time/1000, 'yyyy-MM-dd HH:mm:ss') AS order_time, o.currency, o.amount,\n" +
+                "  r.rate, FROM_UNIXTIME(r.rate_time/1000, 'yyyy-MM-dd HH:mm:ss') AS rate_time,\n" +
                 "  o.amount * r.rate AS rate_amount\n" +
                 "FROM orders AS o,\n" +
                 "LATERAL TABLE (rates_function(order_ltz)) AS r\n" +
@@ -96,3 +96,33 @@ public class TemporalTableFunctionJoinExample {
         env.execute();
     }
 }
+//1. 汇率表输入：美元与日元、欧元、英镑的汇率
+//-- 2025-10-22 09:00:00 日元 汇率 102
+//1761094800000L, Yen, 102
+//-- 2025-10-22 09:00:00 欧元 汇率 114
+//1761094800000L, Euro, 114
+//-- 2025-10-22 09:00:00 美元 汇率 1
+//1761094800000L, USD, 1
+//-- 2025-10-22 11:15:00 欧元 汇率 119
+//1761102900000L, Euro, 119
+//-- 2025-10-22 11:49:00 英镑 汇率 108
+//1761104940000L, Pounds, 108
+
+// 2. 不同货币单位的订单
+//-- 2025-10-22 10:15:00 订单金额 2欧元
+//1761099300000L, 2, Euro
+//-- 2025-10-22 10:30:00 订单金额 1美元
+//1761100200000L, 1, USD
+//-- 2025-10-22 10:32:00  订单金额 50日元
+//1761100320000L, 50, Yen
+//-- 2025-10-22 11:32:00  订单金额 3欧元
+//1761103920000L, 3, Euro
+//-- 2025-10-22 11:50:00  订单金额 5英镑
+//1761105000000L, 5, Pounds
+
+// 3. 统一转换为美元输出
+//+I[2025-10-22 10:32:00, Yen, 50.0, 102.0, 2025-10-22 09:00:00, 5100.0]
+//+I[2025-10-22 10:15:00, Euro, 2.0, 114.0, 2025-10-22 09:00:00, 228.0]
+//+I[2025-10-22 11:32:00, Euro, 3.0, 119.0, 2025-10-22 11:15:00, 357.0]
+//+I[2025-10-22 10:30:00, USD, 1.0, 1.0, 2025-10-22 09:00:00, 1.0]
+//+I[2025-10-22 11:50:00, Pounds, 5.0, 108.0, 2025-10-22 11:49:00, 540.0]
