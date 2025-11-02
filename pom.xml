@@ -8,11 +8,12 @@
   <packaging>pom</packaging>
   <version>1.0</version>
   <modules>
+    <module>common</module>
+    <module>cdc-3.x</module>
     <module>flink-example-1.20</module>
     <module>flink-example-1.13</module>
     <module>flink-example-1.11</module>
-    <module>common</module>
-      <module>cdc-3.x</module>
+    <module>flink-example-1.10</module>
   </modules>
 
   <name>flink-example</name>
