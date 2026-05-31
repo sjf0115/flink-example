@@ -65,7 +65,7 @@ public class LatenessRecentWindowExample {
 
                     @Override
                     public void open(Configuration parameters) throws Exception {
-                        // 保存窗口中的数据
+                        // 用于存储窗口中的累计值
                         windowState = getRuntimeContext().getMapState(
                                 new MapStateDescriptor<Long, WordCountTimestamp>("windowState", Long.class, WordCountTimestamp.class)
                         );
@@ -87,15 +87,16 @@ public class LatenessRecentWindowExample {
                             windowStart = getWindowStartWithOffset(currentWatermark, 0L, windowSize);
                             windowEnd = windowStart + windowSize;
                         }
-                        // 使用窗口结束时间注册事件时间定时器
+                        // 3. 使用窗口结束时间注册事件时间定时器
                         context.timerService().registerEventTimeTimer(windowEnd);
 
-                        // 更新状态
+                        // 4. 更新状态
                         WordCountTimestamp wcState = windowState.get(windowStart);
                         if (Objects.equals(wcState, null)) {
                             wcState = new WordCountTimestamp();
                             wcState.setId(wc.getId());
                             wcState.setWord(wc.getWord());
+                            wcState.setFrequency(wc.getFrequency());
                             wcState.setTimestamp(timestamp);
                             windowState.put(windowStart, wcState);
                         } else {
