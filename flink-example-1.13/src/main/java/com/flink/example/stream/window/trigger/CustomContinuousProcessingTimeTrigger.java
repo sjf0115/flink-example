@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 功能：自定义 ContinuousProcessingTimeTrigger
+ * 功能：自定义 ContinuousProcessingTimeTrigger 演示Bug
  * 作者：SmartSi
  * CSDN博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -42,7 +42,7 @@ public class CustomContinuousProcessingTimeTrigger<W extends Window> extends Tri
             long start = timestamp - (timestamp % interval);
             long nextFireTimestamp = start + interval;
             LOG.info("[OnElement] 注册处理时间定时器 {}", nextFireTimestamp);
-            ctx.registerProcessingTimeTimer(nextFireTimestamp);
+            ctx.registerProcessingTimeTimer(nextFireTimestamp); // 有问题
             fireTimestamp.add(nextFireTimestamp);
             return TriggerResult.CONTINUE;
         }
@@ -64,7 +64,7 @@ public class CustomContinuousProcessingTimeTrigger<W extends Window> extends Tri
             LOG.info("[OnProcessingTime] 触发计算");
             fireTimestamp.clear();
             fireTimestamp.add(time + interval);
-            ctx.registerProcessingTimeTimer(time + interval);
+            ctx.registerProcessingTimeTimer(time + interval);  // 有问题
             return TriggerResult.FIRE;
         }
         return TriggerResult.CONTINUE;

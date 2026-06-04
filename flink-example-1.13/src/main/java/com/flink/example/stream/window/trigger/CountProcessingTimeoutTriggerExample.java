@@ -111,7 +111,7 @@ public class CountProcessingTimeoutTriggerExample {
             ValueState<Long> timeoutState = ctx.getPartitionedState(this.timeoutStateDesc);
             long nextFireTimestamp = ctx.getCurrentProcessingTime() + this.timeout;
             Long timeoutTimestamp = timeoutState.value();
-            // 有新元素到来重新注册新定时器、删除老定时器
+            // 有新元素到来时重新设置超时间(重新注册新定时器、删除老定时器)
             if (timeoutTimestamp != null) {
                 ctx.deleteProcessingTimeTimer(timeoutTimestamp);
                 timeoutState.clear();
